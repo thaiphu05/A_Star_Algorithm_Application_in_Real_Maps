@@ -6,7 +6,7 @@
 ---
 
 ## 📌 Overview
-This project implements the **A* Search Algorithm** on real-world maps using data from **OpenStreetMap (OSM)**. The graph is built with **OSMnx** and **NetworkX**, and the algorithm is applied to find the shortest path between two points in a real-world road network.
+This project implements the **A* Search Algorithm** on real-world maps using data from **OpenStreetMap (OSM)**. The graph is built with **OSMnx** and **NetworkX**, and the algorithm is applied to find the shortest path between two points in a real-world road network ( O cho Dua, Dong Da, Ha Noi, Viet Nam).
 
 ---
 

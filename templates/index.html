@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Map Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Nhập địa điểm để lấy bản đồ</h1>
+    <input type="text" id="location" class="form-control mb-3" placeholder="Nhập tên địa điểm">
+    <button onclick="getGraph()" class="btn btn-primary">Tạo bản đồ</button>
+    
+    <h2 class="mt-4">Kết quả:</h2>
+    <div class="map-container">
+        <img id="graphImage" src="" alt="Bản đồ sẽ hiển thị ở đây" style="display:none; max-width:100%;">
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}
