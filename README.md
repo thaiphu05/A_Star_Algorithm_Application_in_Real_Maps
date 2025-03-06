@@ -46,7 +46,8 @@ This project implements the **A* Search Algorithm** on real-world maps using dat
    pip install osmnx networkx matplotlib numpy
    ```
 2. Run the main file :
-   Run file A_star.ipynb ( All )
+   Run file Deploy.py
+   Follow link
    
 ---
 
