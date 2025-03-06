@@ -79,7 +79,7 @@ def path_to_edges(path):
 def A_star(graph, start, goal):
     if start not in graph or goal not in graph:
         return None
-        
+    max_cutoff = h1(start, goal)*1.5
     open_set = []
     heapq.heappush(open_set, (0, start))
     came_from = {}
@@ -102,9 +102,9 @@ def A_star(graph, start, goal):
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
                 f_score[neighbor] = g_score[neighbor] + h1(neighbor, goal)
-                
+                if f_score[neighbor] > max_cutoff:
+                    continue
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
-
     return None
 
 def Greedy_best_first_search(start, goal, graph):

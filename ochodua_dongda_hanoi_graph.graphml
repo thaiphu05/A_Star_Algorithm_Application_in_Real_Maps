@@ -823,7 +823,7 @@
     </edge>
     <edge source="320236991" target="1753897155" id="1">
       <data key="d7">[163711328, 675260226, 163711331]</data>
-      <data key="d10">['Ngõ 178 Nguyễn Lương Bằng', 'Ngõ 59 Hoàng Cầu']</data>
+      <data key="d10">['Ngõ 59 Hoàng Cầu', 'Ngõ 178 Nguyễn Lương Bằng']</data>
       <data key="d11">residential</data>
       <data key="d8">False</data>
       <data key="d12">[False, True]</data>
@@ -1063,7 +1063,7 @@
       <data key="d8">False</data>
       <data key="d12">[False, True]</data>
       <data key="d13">327.49699999999996</data>
-      <data key="d10">['Ngõ 178 Nguyễn Lương Bằng', 'Ngõ 59 Hoàng Cầu']</data>
+      <data key="d10">['Ngõ 59 Hoàng Cầu', 'Ngõ 178 Nguyễn Lương Bằng']</data>
       <data key="d14">LINESTRING (105.8266047 21.01633, 105.8267446 21.0162535, 105.8268627 21.0161917, 105.8270042 21.0161175, 105.8270847 21.0160754, 105.8271426 21.0160451, 105.8271688 21.0160313, 105.8273004 21.0159617, 105.8274258 21.0158955, 105.8275652 21.0158218, 105.8277656 21.0161977, 105.8278825 21.0164168, 105.8279999 21.016637, 105.8277817 21.0167344, 105.8277655 21.016742, 105.8273771 21.0169234, 105.8273422 21.0169397, 105.8272054 21.0170074, 105.8270342 21.0170785)</data>
     </edge>
     <edge source="1753897155" target="320236984" id="0">
@@ -1303,7 +1303,7 @@
     <edge source="2050902836" target="5489009622" id="0">
       <data key="d7">[194581841, 711708476, 711708477]</data>
       <data key="d8">True</data>
-      <data key="d9">['4', '3', '5']</data>
+      <data key="d9">['5', '3', '4']</data>
       <data key="d10">Phố Hào Nam</data>
       <data key="d11">secondary</data>
       <data key="d15">50</data>
@@ -1688,7 +1688,7 @@
     <edge source="4961341865" target="1904360482" id="0">
       <data key="d7">[708914976, 1240127122]</data>
       <data key="d8">True</data>
-      <data key="d9">['2', '3']</data>
+      <data key="d9">['3', '2']</data>
       <data key="d10">Phố Hoàng Cầu</data>
       <data key="d11">secondary</data>
       <data key="d12">False</data>
@@ -2000,7 +2000,7 @@
     </edge>
     <edge source="5707161170" target="318259616" id="0">
       <data key="d7">[946867354, 28947148]</data>
-      <data key="d10">['Phố Trần Quang Diệu', 'Ngõ 59 Hoàng Cầu']</data>
+      <data key="d10">['Ngõ 59 Hoàng Cầu', 'Phố Trần Quang Diệu']</data>
       <data key="d11">residential</data>
       <data key="d8">False</data>
       <data key="d12">[False, True]</data>
@@ -2225,7 +2225,7 @@
     <edge source="6685236291" target="8231491408" id="0">
       <data key="d7">[711109718, 506383095]</data>
       <data key="d8">True</data>
-      <data key="d9">['2', '3']</data>
+      <data key="d9">['3', '2']</data>
       <data key="d10">Phố Ô Chợ Dừa</data>
       <data key="d11">secondary</data>
       <data key="d15">50</data>
@@ -2424,7 +2424,7 @@
       <data key="d12">True</data>
       <data key="d13">27.774</data>
     </edge>
-    <data key="d0">2025-03-05 22:18:54</data>
+    <data key="d0">2025-03-06 15:02:48</data>
     <data key="d1">OSMnx 1.9.4</data>
     <data key="d2">epsg:4326</data>
     <data key="d3">True</data>
