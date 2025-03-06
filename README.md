@@ -46,9 +46,12 @@ This project implements the **A* Search Algorithm** on real-world maps using dat
    pip install osmnx networkx matplotlib numpy
    ```
 2. Run the main file :
-   Run file Deploy.py
-   Follow link
    
+   Run file Deploy.py
+   
+4. Demo :
+   ![image](https://github.com/user-attachments/assets/31651365-445e-4dbe-8257-f9aa87222dba)
+
 ---
 
 ## 📌 Authors
