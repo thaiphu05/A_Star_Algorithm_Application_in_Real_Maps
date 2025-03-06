@@ -6,7 +6,28 @@ import osmnx as ox
 import networkx as nx
 from math import radians, cos, sqrt
 
-def h1(current, goal, maps): 
+maps = ox.load_graphml('ochodua_dongda_hanoi_graph.graphml')
+
+def Create_path_coord (path, maps):
+    path_coords = [
+        [(maps.nodes[e[0]]['y'], maps.nodes[e[0]]['x']), (maps.nodes[e[1]]['y'], maps.nodes[e[1]]['x'])]
+        for e in path_to_edges(path)
+    ]
+    return path_coords
+
+def Create_simple_Graph(maps):
+    Edges =list (maps.edges(data=True, keys=True))
+    Graph ={}
+    for node in maps.nodes:
+        Graph[node] = []
+    for node in maps.nodes:
+        for edges in Edges:
+            if edges[0]== node:
+                    Graph[node].append([edges[1],edges[3]['length']]) 
+
+    return Graph
+
+def h1(current, goal): 
 # euclidean distance between two points in multidigraph 
     lat1 = maps.nodes[current]['y']
     lon1 = maps.nodes[current]['x']
@@ -20,7 +41,7 @@ def h1(current, goal, maps):
     
     return sqrt(dx**2 + dy**2)
 
-def heuristic_bfs(start, goal):
+def heuristic_bfs(graph, start, goal ):
 # Heuristic function for A* algorithm using mean_BFS 
     if start == goal:
         return 0
@@ -37,7 +58,7 @@ def heuristic_bfs(start, goal):
             explored.append(current)
             break
         explored.append(current)
-        for node in Graph[current]:
+        for node in graph[current]:
             if node[0] not in explored and node[0] not in frontier:
                 frontier.append(node[0])
                 parent_nodes[node[0]] = current
@@ -47,16 +68,16 @@ def heuristic_bfs(start, goal):
         
     return calculate_distance_bfs(parent_nodes, start, goal)
 
-def calculate_distance_bfs(parent_nodes, start, goal):
+def calculate_distance_bfs(parent_nodes, graph, start, goal):
     try:
         distance = 0
         current = goal
         while current != start:
-            if current not in parent_nodes or parent_nodes[current] not in Graph:
+            if current not in parent_nodes or parent_nodes[current] not in graph:
                 return float('inf')
             parent = parent_nodes[current]
             # Tìm khoảng cách giữa current và parent
-            for node, dist in Graph[parent]:
+            for node, dist in graph[parent]:
                 if node == current:
                     distance += dist
                     break
@@ -71,7 +92,7 @@ def reconstruct_path(came_from, current):
         current = came_from[current]
         total_path.append(current)
     total_path.reverse()
-    return total_path
+    return Create_path_coord(total_path,maps)
 
 def path_to_edges(path):
     return [(path[i], path[i + 1]) for i in range(len(path) - 1)]
@@ -79,7 +100,7 @@ def path_to_edges(path):
 def A_star(graph, start, goal):
     if start not in graph or goal not in graph:
         return None
-    max_cutoff = h1(start, goal)*1.5
+    max_cutoff = h1(start, goal,)*1.5
     open_set = []
     heapq.heappush(open_set, (0, start))
     came_from = {}
@@ -107,7 +128,7 @@ def A_star(graph, start, goal):
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
     return None
 
-def Greedy_best_first_search(start, goal, graph):
+def Greedy_best_first_search(graph, start, goal):
     if start not in graph or goal not in graph:
         return None
     open_set = []
@@ -131,7 +152,7 @@ def Greedy_best_first_search(start, goal, graph):
                 heapq.heappush(open_set, (h1(neighbor, goal), neighbor))
     
     return None
-def UCS (start , goal , graph ):
+def UCS (graph, start , goal ):
     if start not in graph or goal not in graph:
             return None
     open_set = [(0, start)]
@@ -155,4 +176,29 @@ def UCS (start , goal , graph ):
             heapq.heappush (open_set, (g_score[neighbor[0]], neighbor))
     return None 
 
-        
+def Dijkstra(graph, start, goal):
+    """ Thuật toán Dijkstra tìm đường đi ngắn nhất từ start đến goal """
+    if start not in graph or goal not in graph:
+        return None
+    
+    open_set = []
+    heapq.heappush(open_set, (0, start))  
+
+    came_from = {}  
+    g_score = {node: float('inf') for node in graph}  
+    g_score[start] = 0  
+
+    while open_set:
+        current_cost, current = heapq.heappop(open_set)
+        if current == goal:
+            return reconstruct_path(came_from, current)
+
+        for neighbor_data in graph[current]:  
+            neighbor, cost = neighbor_data  
+            tentative_g_score = g_score[current] + cost
+            if tentative_g_score < g_score[neighbor]:  
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                heapq.heappush(open_set, (g_score[neighbor], neighbor))
+
+    return None  

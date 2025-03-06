@@ -1,20 +1,183 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Map</title>
+    <link rel="stylesheet" href="/static/leaflet.css" />
+    <script src="/static/leaflet.js"></script>
+    <script src="static/jquery-3.6.0.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        #algorithmLabel {
+            position: absolute;
+            top: 170px; /* Adjust this value to move the label downward */
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 5px;
+        }
+        #algorithmSelect {
+            position: absolute;
+            top: 200px; /* Adjust this value to move the dropdown downward */
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        #toggleNodes{
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        #togglePaths {
+            position: absolute;
+            top: 120px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <label id="algorithmLabel" for="algorithmLabel">Choose Algorithm:</label>
+    <select id="algorithmSelect">
+        <!-- <option value="DFS">DFS</option>
+        <option value="BFS">BFS</option> -->
+        <option value="Dijkstra">Dijkstra</option>
+        <option value="A Star">A Star</option>
+        <option value="UCS"> UCS </option>
+        <!-- <option value="Iterative Deepening Search">Iterative Deepening Search</option> -->
+        <option value="Greedy BFS">Greedy BFS</option>
+    </select>
+    <button id="toggleNodes">Toggle Nodes</button>
+    <button id="togglePaths">Toggle Paths</button>
+    <script>
+        var map = L.map('map').setView([21.033, 105.825], 15);
 
-{% block title %}Map Generator{% endblock %}
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-{% block content %}
-<div class="container mt-4">
-    <h1>Nhập địa điểm để lấy bản đồ</h1>
-    <input type="text" id="location" class="form-control mb-3" placeholder="Nhập tên địa điểm">
-    <button onclick="getGraph()" class="btn btn-primary">Tạo bản đồ</button>
-    
-    <h2 class="mt-4">Kết quả:</h2>
-    <div class="map-container">
-        <img id="graphImage" src="" alt="Bản đồ sẽ hiển thị ở đây" style="display:none; max-width:100%;">
-    </div>
-</div>
-{% endblock %}
+        // Safely pass the Python `node_coords` data to JavaScript
+        var nodes = JSON.parse('{{ node_coords|tojson|safe }}');
+        var paths = JSON.parse('{{ path_coords|tojson|safe }}');
 
-{% block scripts %}
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-{% endblock %}
+        // Create a layer group for the markers
+        var nodeMarkers = L.layerGroup();
+        var pathMarkers = L.layerGroup();
+
+        // Add all node markers to the layer group
+        nodes.forEach(function(coord) {
+            var marker = L.marker(coord);
+            marker.addTo(nodeMarkers);
+        });
+        paths.forEach(function(path) {
+            var polyline = L.polyline(path, { color: 'blue' });
+            polyline.addTo(pathMarkers);
+        });
+
+        // Add a toggle button for node markers
+        document.getElementById('toggleNodes').addEventListener('click', function() {
+            if (map.hasLayer(nodeMarkers)) {
+                map.removeLayer(nodeMarkers);
+            } else {
+                map.addLayer(nodeMarkers);
+            }
+        });
+
+        document.getElementById('togglePaths').addEventListener('click', function() {
+            if (map.hasLayer(pathMarkers)) {
+                map.removeLayer(pathMarkers);
+            } else {
+                map.addLayer(pathMarkers);
+            }
+        });
+
+
+        var click_coords = [];
+        var start_marker, end_marker, polyline;
+        var redIcon = L.icon({
+            iconUrl: '/static/images/red-marker.png', 
+            iconSize: [30, 40],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+        map.on('click', function(e) {
+            if (click_coords.length >= 2) {
+                click_coords = [];
+                if (start_marker) map.removeLayer(start_marker);
+                if (end_marker) map.removeLayer(end_marker);
+                if (polyline) map.removeLayer(polyline);
+            }
+
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            click_coords.push([lat, lng]);
+
+            if (click_coords.length == 1) {
+                start_marker = L.marker([lat, lng]).addTo(map).bindPopup("Start Point").openPopup()
+                start_marker.setIcon(redIcon);
+            } else if (click_coords.length == 2) {
+                end_marker = L.marker([lat, lng]).addTo(map).bindPopup("End Point").openPopup();
+                end_marker.setIcon(redIcon);
+                // Get the selected algorithm from the dropdown list
+                var algorithm = document.getElementById('algorithmSelect').value;
+                var maxDepth = algorithm === 'Depth Limited DFS' ? prompt("Enter max depth:") : '0';
+
+                // Send coordinates and algorithm to the server to calculate the path
+                $.ajax({
+                    url: "/find_shortest_path",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        start: click_coords[0],
+                        end: click_coords[1],
+                        algorithm: algorithm,
+                        max_depth: maxDepth
+                    }),
+                    success: function(response) {
+                        // Draw the path on the map
+                        var latlngs = response.path_coords;
+                        var maxDepth = response.max_depth;
+                
+                        polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
+                        map.fitBounds(polyline.getBounds());
+                        if (maxDepth > 0) {
+                            var startPoint = latlngs[0];
+                            L.popup()
+                                .setLatLng(startPoint)
+                                .setContent("Max Depth: " + maxDepth)
+                                .openOn(map);
+                        }
+                    },
+                    error: function(error) {
+                        console.error(error);
+                        alert("Error: " + error.responseJSON.error);
+                    }
+                });
+            }
+        });
+
+
+    </script>
+</body>
+</html>
