@@ -100,7 +100,7 @@ def path_to_edges(path):
 def A_star(graph, start, goal):
     if start not in graph or goal not in graph:
         return None
-    max_cutoff = h1(start, goal,)*1.5
+    max_cutoff = h1(start, goal,)*2
     open_set = []
     heapq.heappush(open_set, (0, start))
     came_from = {}
@@ -170,10 +170,13 @@ def UCS (graph, start , goal ):
 
         for neighbor in graph[current] :
             if neighbor[0] in visited : continue
-
-            g_score[neighbor[0]] = neighbor[1] + g_score [current]
-            came_from[neighbor[0]] = current
-            heapq.heappush (open_set, (g_score[neighbor[0]], neighbor))
+            for node, dist in graph[current]:
+                if node == neighbor[0]:
+                    break
+            if g_score[current] + dist < g_score[neighbor[0]]:
+                g_score[neighbor[0]] = neighbor[1] + g_score [current]
+                came_from[neighbor[0]] = current
+                heapq.heappush (open_set, (g_score[neighbor[0]], neighbor))
     return None 
 
 def Dijkstra(graph, start, goal):

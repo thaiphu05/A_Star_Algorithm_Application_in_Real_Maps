@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>Map</title>
     <link rel="stylesheet" href="/static/leaflet.css" />
     <script src="/static/leaflet.js"></script>
@@ -56,6 +61,7 @@
     </style>
 </head>
 <body>
+
     <div id="map"></div>
     <label id="algorithmLabel" for="algorithmLabel">Choose Algorithm:</label>
     <select id="algorithmSelect">
@@ -126,6 +132,8 @@
                 if (start_marker) map.removeLayer(start_marker);
                 if (end_marker) map.removeLayer(end_marker);
                 if (polyline) map.removeLayer(polyline);
+                if (start_line) map.removeLayer(start_line)
+                if (end_line) map.removeLayer(end_line)
             }
 
             var lat = e.latlng.lat;
@@ -158,6 +166,15 @@
                         // Draw the path on the map
                         var latlngs = response.path_coords;
                         var maxDepth = response.max_depth;
+                        var start_path = response.start_path;
+                        var end_path = response.end_path;
+                        
+                        start_line = L.polyline(start_path, {color: 'red'}).addTo(map);
+                        map.fitBounds(start_line.getBounds());
+                        
+                        end_line = L.polyline( end_path, {color: 'red'}).addTo(map);
+                        map.fitBounds(end_line.getBounds());
+                        
                 
                         polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
                         map.fitBounds(polyline.getBounds());

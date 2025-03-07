@@ -54,9 +54,11 @@ def find_shortest_path():
     # elif func == IDS:
     #     path_coords, max_depth = func(G, start_node, end_node)
     path_coords = func(G, start_node, end_node)
+    start_coords_path =[(O_cho_dua_map.nodes[start_node]['y'], O_cho_dua_map.nodes[start_node]['x']),(start_coords[0], start_coords[1])]
+    end_coords_path =[(O_cho_dua_map.nodes[end_node]['y'], O_cho_dua_map.nodes[end_node]['x']),(end_coords[0], end_coords[1])]
     if path_coords is None:
         return jsonify({"error": "No path found"}), 404
-    return jsonify({'path_coords': path_coords, 'max_depth': max_depth})
+    return jsonify({'path_coords': path_coords, 'max_depth': max_depth, 'start_path': start_coords_path , 'end_path': end_coords_path })
 
 if __name__ == '__main__':
     app.run(debug=True,port = 8000)
