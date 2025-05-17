@@ -12,6 +12,8 @@ G = Create_simple_Graph(O_cho_dua_map)
 
 @app.route('/')
 def index():
+    global O_cho_dua_map
+    global G
     node_coords = [(O_cho_dua_map.nodes[node]['y'], O_cho_dua_map.nodes[node]['x']) for node in O_cho_dua_map.nodes]
     path_coords = [
         [(O_cho_dua_map.nodes[e[0]]['y'], O_cho_dua_map.nodes[e[0]]['x']), (O_cho_dua_map.nodes[e[1]]['y'], O_cho_dua_map.nodes[e[1]]['x'])]
@@ -36,53 +38,55 @@ path_setup_list = {
 # Route xử lý thay đổi đường đi (xóa/thêm đường)
 @app.route("/setup_path", methods=["POST"])
 def setup_path():
+    global O_cho_dua_map
+    global G
     data = request.get_json()
     start_coords = (data["start"])
     end_coords = (data["end"])
     action = data.get("action")
-    start = ox.distance.nearest_nodes( O_cho_dua_map, start_coords[1], start_coords[0])
+    start = ox.distance.nearest_nodes(O_cho_dua_map, start_coords[1], start_coords[0])
     end = ox.distance.nearest_nodes(O_cho_dua_map, end_coords[1], end_coords[0])
     
     print("Start node:", start, "End node:", end)
     if action == "DeletePath":
         try:
             # Xóa cạnh
-            newmaps = Delete_Path_1(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
-
+            O_cho_dua_map = Delete_Path_1(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
+            G = Create_simple_Graph(O_cho_dua_map)
             # Trả về lại node + path hiện tại để client cập nhật lại
-            nodes = [[newmaps.nodes[n]["y"], newmaps.nodes[n]["x"]] for n in newmaps.nodes()]
+            nodes = [[O_cho_dua_map.nodes[n]["y"], O_cho_dua_map.nodes[n]["x"]] for n in O_cho_dua_map.nodes()]
             paths = []
-            for u, v, data in newmaps.edges(data=True):
+            for u, v, data in O_cho_dua_map.edges(data=True):
                 if "geometry" in data:
                     coords = [[point[1], point[0]] for point in data["geometry"].coords]
                 else:
                     coords = [
-                        [newmaps.nodes[u]["y"], newmaps.nodes[u]["x"]],
-                        [newmaps.nodes[v]["y"], newmaps.nodes[v]["x"]]
+                        [O_cho_dua_map.nodes[u]["y"], O_cho_dua_map.nodes[u]["x"]],
+                        [O_cho_dua_map.nodes[v]["y"], O_cho_dua_map.nodes[v]["x"]]
                     ]
                 paths.append(coords)
-
             return jsonify({
                 "nodes": nodes,
                 "paths": paths
+
             })
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     elif action == "DeletePathBoth":
         try:
             # Xóa cạnh
-            newmaps = Delete_Path_2(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
-
+            O_cho_dua_map = Delete_Path_2(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
+            G = Create_simple_Graph(O_cho_dua_map)
             # Trả về lại node + path hiện tại để client cập nhật lại
-            nodes = [[newmaps.nodes[n]["y"], newmaps.nodes[n]["x"]] for n in newmaps.nodes()]
+            nodes = [[O_cho_dua_map.nodes[n]["y"], O_cho_dua_map.nodes[n]["x"]] for n in O_cho_dua_map.nodes()]
             paths = []
-            for u, v, data in newmaps.edges(data=True):
+            for u, v, data in O_cho_dua_map.edges(data=True):
                 if "geometry" in data:
                     coords = [[point[1], point[0]] for point in data["geometry"].coords]
                 else:
                     coords = [
-                        [newmaps.nodes[u]["y"], newmaps.nodes[u]["x"]],
-                        [newmaps.nodes[v]["y"], newmaps.nodes[v]["x"]]
+                        [O_cho_dua_map.nodes[u]["y"], O_cho_dua_map.nodes[u]["x"]],
+                        [O_cho_dua_map.nodes[v]["y"], O_cho_dua_map.nodes[v]["x"]]
                     ]
                 paths.append(coords)
 
@@ -95,6 +99,8 @@ def setup_path():
 # Route tìm đường đi ngắn nhất
 @app.route('/find_shortest_path', methods=['POST'])
 def find_shortest_path():
+    global O_cho_dua_map
+    global G
     data = request.json
     start_coords = data['start']
     end_coords = data['end']
