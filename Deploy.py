@@ -5,14 +5,10 @@ import os
 import shutil
 from shortest_path import *
 
-
-
 app = Flask(__name__)
 
-O_cho_dua_map = ox.load_graphml('ochodua_dongda_hanoi_graph.graphml')
-
-G= Create_simple_Graph(O_cho_dua_map)
-
+O_cho_dua_map = ox.graph_from_xml('map.osm')
+G = Create_simple_Graph(O_cho_dua_map)
 
 @app.route('/')
 def index():
@@ -23,42 +19,104 @@ def index():
     ]
     return render_template('index.html', node_coords=node_coords, path_coords=path_coords)
 
+# Danh sách thuật toán
 algorithm_list = {
-    'Dijkstra': Dijkstra, 
-    'A Star': A_star, 
+    'Dijkstra': Dijkstra,
+    'A Star': A_star,
     'UCS': UCS,
     'Greedy BFS': Greedy_best_first_search,
 }
 
+# Danh sách hành động với đường đi
+path_setup_list = {
+    'DeletePath': Delete_Path_1,
+    'DeletePathBoth': Delete_Path_2,
+}
+
+# Route xử lý thay đổi đường đi (xóa/thêm đường)
+@app.route("/setup_path", methods=["POST"])
+def setup_path():
+    data = request.get_json()
+    start_coords = (data["start"])
+    end_coords = (data["end"])
+    action = data.get("action")
+    start = ox.distance.nearest_nodes( O_cho_dua_map, start_coords[1], start_coords[0])
+    end = ox.distance.nearest_nodes(O_cho_dua_map, end_coords[1], end_coords[0])
+    
+    print("Start node:", start, "End node:", end)
+    if action == "DeletePath":
+        try:
+            # Xóa cạnh
+            newmaps = Delete_Path_1(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
+
+            # Trả về lại node + path hiện tại để client cập nhật lại
+            nodes = [[newmaps.nodes[n]["y"], newmaps.nodes[n]["x"]] for n in newmaps.nodes()]
+            paths = []
+            for u, v, data in newmaps.edges(data=True):
+                if "geometry" in data:
+                    coords = [[point[1], point[0]] for point in data["geometry"].coords]
+                else:
+                    coords = [
+                        [newmaps.nodes[u]["y"], newmaps.nodes[u]["x"]],
+                        [newmaps.nodes[v]["y"], newmaps.nodes[v]["x"]]
+                    ]
+                paths.append(coords)
+
+            return jsonify({
+                "nodes": nodes,
+                "paths": paths
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    elif action == "DeletePathBoth":
+        try:
+            # Xóa cạnh
+            newmaps = Delete_Path_2(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
+
+            # Trả về lại node + path hiện tại để client cập nhật lại
+            nodes = [[newmaps.nodes[n]["y"], newmaps.nodes[n]["x"]] for n in newmaps.nodes()]
+            paths = []
+            for u, v, data in newmaps.edges(data=True):
+                if "geometry" in data:
+                    coords = [[point[1], point[0]] for point in data["geometry"].coords]
+                else:
+                    coords = [
+                        [newmaps.nodes[u]["y"], newmaps.nodes[u]["x"]],
+                        [newmaps.nodes[v]["y"], newmaps.nodes[v]["x"]]
+                    ]
+                paths.append(coords)
+
+            return jsonify({
+                "nodes": nodes,
+                "paths": paths
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+# Route tìm đường đi ngắn nhất
 @app.route('/find_shortest_path', methods=['POST'])
 def find_shortest_path():
     data = request.json
     start_coords = data['start']
     end_coords = data['end']
     algorithm = data['algorithm']
-    max_depth = int(data['max_depth']) # if not specified, max_depth is 0
-    # Find the nearest nodes on the graph to the clicked points
-    start_node = ox.distance.nearest_nodes(O_cho_dua_map, start_coords[1], start_coords[0])  # lon, lat
+    max_depth = int(data.get('max_depth', 0))
+
+    start_node = ox.distance.nearest_nodes(O_cho_dua_map, start_coords[1], start_coords[0])
     end_node = ox.distance.nearest_nodes(O_cho_dua_map, end_coords[1], end_coords[0])
-    
+
     func = algorithm_list.get(algorithm)
     if not func:
         return jsonify({"error": "Invalid algorithm selected"}), 400
 
-    # Calculate the path using the selected algorithm
-    path_coords = []
-    # if func != DLS and func != IDS:
-    #     path_coords = func(G, start_node, end_node)
-    # elif func == DLS:
-    #     path_coords = func(G, start_node, end_node, max_depth)
-    # elif func == IDS:
-    #     path_coords, max_depth = func(G, start_node, end_node)
     path_coords = func(G, start_node, end_node)
-    start_coords_path =[(O_cho_dua_map.nodes[start_node]['y'], O_cho_dua_map.nodes[start_node]['x']),(start_coords[0], start_coords[1])]
-    end_coords_path =[(O_cho_dua_map.nodes[end_node]['y'], O_cho_dua_map.nodes[end_node]['x']),(end_coords[0], end_coords[1])]
+
+    start_coords_path = [(O_cho_dua_map.nodes[start_node]['y'], O_cho_dua_map.nodes[start_node]['x']), (start_coords[0], start_coords[1])]
+    end_coords_path = [(O_cho_dua_map.nodes[end_node]['y'], O_cho_dua_map.nodes[end_node]['x']), (end_coords[0], end_coords[1])]
+
     if path_coords is None:
         return jsonify({"error": "No path found"}), 404
-    return jsonify({'path_coords': path_coords, 'max_depth': max_depth, 'start_path': start_coords_path , 'end_path': end_coords_path })
+
+    return jsonify({'path_coords': path_coords, 'max_depth': max_depth, 'start_path': start_coords_path, 'end_path': end_coords_path})
 
 if __name__ == '__main__':
-    app.run(debug=True,port = 8000)
+    app.run(debug=True, port=8000)
