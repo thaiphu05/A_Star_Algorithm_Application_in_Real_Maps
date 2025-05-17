@@ -43,7 +43,7 @@ This project implements the **A* Search Algorithm** on real-world maps using dat
 ## 🚀 How to Run
 1. Install dependencies:
    ```bash
-   pip install osmnx networkx matplotlib numpy
+   pip install osmnx networkx matplotlib numpy scikit-learn
    ```
 2. Run the main file :
    
