@@ -33,7 +33,7 @@
         #setupActionSelect { top: 330px; padding: 5px; display: none; }
         #toggleNodes { top: 80px; }
         #togglePaths { top: 130px; }
-        #DeletePath { top: 180px; }
+        #Setup{ top: 180px; }
         #algorithmLabel { top: 230px; padding: 5px; }
         #algorithmSelect { top: 230px; padding: 5px; }
     </style>
@@ -43,7 +43,7 @@
 
     <button id="toggleNodes" class="control">Toggle Nodes</button>
     <button id="togglePaths" class="control">Toggle Paths</button>
-    <button id="DeletePath" class="control">Delete Path</button>
+    <button id="Setup" class="control">Set Up Map</button>
     <!-- <label id="algorithmLabel" class="control" for="algorithmSelect">   Algorithm:</label> -->
     <select id="algorithmSelect" class="control">
         <option value="Dijkstra">Dijkstra</option>
@@ -60,6 +60,7 @@
     <select id="setupActionSelect" class="control">
         <option value="DeletePath">Delete One-Way Path</option>
         <option value="DeletePathBoth">Delete Two-Way Path</option>
+        <option value="SetTraficjam">Set Traffic Jam</option>
     </select>
 
     <script>
@@ -119,7 +120,7 @@
             popupAnchor: [1, -34]
         });
 
-        document.getElementById('DeletePath').addEventListener('click', function () {
+        document.getElementById('Setup').addEventListener('click', function () {
             const actionMode = document.getElementById("actionSelect").value;
                 if (actionMode !== 'SetupMap') return;
 
@@ -129,6 +130,7 @@
                 }
 
                 const selectedAction = document.getElementById('setupActionSelect').value;
+                
                 $.ajax({
                     url: "/setup_path",
                     type: "POST",
@@ -166,7 +168,7 @@
 
         });
 
-        ['toggleNodes', 'togglePaths', 'DeletePath', 'algorithmSelect'].forEach(id =>
+        ['toggleNodes', 'togglePaths', 'Setup', 'algorithmSelect'].forEach(id =>
             L.DomEvent.disableClickPropagation(document.getElementById(id))
         );
 

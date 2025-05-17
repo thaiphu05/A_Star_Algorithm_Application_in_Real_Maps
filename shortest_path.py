@@ -42,25 +42,17 @@ def Delete_Path_2(graph, start, goal):
         print("Error removing edge:", e)
     return graph
 
-def Traffic_Jam (graph, start, goal):
+def Traffic_Jam(graph, start, goal):
     try:
-        edges_to_remove = list(graph.edges(start, keys=True))
-        for u, v, k in edges_to_remove:
+        for _, v, k in list(graph.edges(start, keys=True)):
             if v == goal:
-                k= k*3
+                graph[start][v][k]['length'] *= 3
+        for _, v, k in list(graph.edges(goal, keys=True)):
+            if v == start:
+                graph[goal][v][k]['length'] *= 3
     except Exception as e:
-        print("Error removing edge:", e)
+        print("Error modifying edge weight:", e)
     return graph
-
-# def Add_Path(graph, start, goal, length):
-#     if start not in graph:
-#         graph[start] = []
-#     if goal not in graph:
-#         graph[goal] = []
-#     graph[start].append([goal, length])
-#     graph[goal].append([start, length])
-#     return graph
-
 
 def path_to_edges(path):
     return [(path[i], path[i + 1]) for i in range(len(path) - 1)]

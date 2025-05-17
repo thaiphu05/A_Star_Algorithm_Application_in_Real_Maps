@@ -33,6 +33,7 @@ algorithm_list = {
 path_setup_list = {
     'DeletePath': Delete_Path_1,
     'DeletePathBoth': Delete_Path_2,
+    'SetTrafficJam' : Traffic_Jam
 }
 
 # Route xử lý thay đổi đường đi (xóa/thêm đường)
@@ -48,6 +49,13 @@ def setup_path():
     end = ox.distance.nearest_nodes(O_cho_dua_map, end_coords[1], end_coords[0])
     
     print("Start node:", start, "End node:", end)
+    # Get the distance if edge exists
+    try:
+        distance = O_cho_dua_map[start][end][0]['length']
+        print("Distance between nodes:", distance, "meters")
+    except KeyError:
+        print("No direct edge between these nodes")
+    
     if action == "DeletePath":
         try:
             # Xóa cạnh
@@ -90,6 +98,30 @@ def setup_path():
                     ]
                 paths.append(coords)
 
+            return jsonify({
+                "nodes": nodes,
+                "paths": paths
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else :
+        try:
+            O_cho_dua_map = Traffic_Jam(O_cho_dua_map, int(start), int(end))  # hoặc Delete_Path_1 nếu là oneway
+            G = Create_simple_Graph(O_cho_dua_map)            
+            nodes = [[O_cho_dua_map.nodes[n]["y"], O_cho_dua_map.nodes[n]["x"]] for n in O_cho_dua_map.nodes()]
+
+            paths = []
+            for u, v, data in O_cho_dua_map.edges(data=True):
+                if "geometry" in data:
+                    coords = [[point[1], point[0]] for point in data["geometry"].coords]
+                else:
+                    coords = [
+                        [O_cho_dua_map.nodes[u]["y"], O_cho_dua_map.nodes[u]["x"]],
+                        [O_cho_dua_map.nodes[v]["y"], O_cho_dua_map.nodes[v]["x"]]
+                    ]
+                paths.append(coords)
+            distance = O_cho_dua_map[start][end][0]['length']
+            print("New distance between nodes:", distance, "meters")
             return jsonify({
                 "nodes": nodes,
                 "paths": paths
