@@ -46,7 +46,7 @@ This project implements the **A* Search Algorithm** on real-world maps using dat
    pip install osmnx networkx matplotlib numpy scikit-learn
    ```
 2. Run the main file :
-   
+   Run file shortest_path.py
    Run file Deploy.py
    
 4. Demo :
