@@ -11,7 +11,7 @@ import joblib
 model = joblib.load('ml_heuristic_model.pkl')
 
 
-maps = ox.graph_from_xml('map.osm')
+maps = ox.graph_from_xml('map_new.osm')
 
 def Create_path_coord(path, maps):
     path_coords = [

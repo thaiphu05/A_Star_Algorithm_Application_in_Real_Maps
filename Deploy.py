@@ -7,7 +7,7 @@ from shortest_path import *
 
 app = Flask(__name__)
 
-O_cho_dua_map = ox.graph_from_xml('map.osm')
+O_cho_dua_map = ox.graph_from_xml('map_new.osm')
 G = Create_simple_Graph(O_cho_dua_map)
 
 @app.route('/')
