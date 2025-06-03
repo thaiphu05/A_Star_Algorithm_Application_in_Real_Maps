@@ -6,7 +6,8 @@ import osmnx as ox
 import networkx as nx
 from math import radians, cos, sqrt
 import joblib
-
+import torch
+import xgboost as xgb
 # Load model từ file đã lưu
 model = joblib.load('ml_heuristic_model.pkl')
 
@@ -76,9 +77,8 @@ def h1(current, goal):
     dy = (lat2 - lat1) * 111320
     
     return sqrt(dx**2 + dy**2)
-def h_ml(current, goal):
-    euc = h1(current, goal)
-    return model.predict([[euc]])[0]
+def h_ml(current, goal, maps):
+    return model.predict(xgb.DMatrix([[maps.nodes[current]['y'],maps.nodes[current]['x'], maps.nodes[goal]['y'],maps.nodes[ goal] ['x']]]))[0]
 
 def heuristic_bfs(graph, start, goal):
     if start == goal:
@@ -152,7 +152,8 @@ def A_star(graph, start, goal):
             if tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , h_ml(neighbor, goal))
+                # f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , ML_heuristic(neighbor, goal, graph, model))
+                f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , h_ml(neighbor, goal, maps))
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
     return None
 
@@ -230,3 +231,17 @@ def Dijkstra(graph, start, goal):
                 heapq.heappush(open_set, (g_score[neighbor], neighbor))
 
     return None
+def ML_heuristic(u, end, G, model):
+    u_x, u_y = G.nodes[u]['x'], G.nodes[u]['y']
+    end_x, end_y = G.nodes[end]['x'], G.nodes[end]['y']
+    
+    try:
+        path = nx.shortest_path(G, u, end)
+        n_between = max(len(path) - 2, 0)
+    except:
+        n_between = 0
+
+    input_tensor = torch.tensor([[u_x, u_y, n_between]], dtype=torch.float32)
+    with torch.no_grad():
+        h = model(input_tensor).item()
+    return h
