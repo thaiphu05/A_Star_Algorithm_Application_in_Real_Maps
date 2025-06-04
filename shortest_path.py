@@ -7,13 +7,57 @@ import networkx as nx
 from math import radians, cos, sqrt
 import joblib
 import torch
-import xgboost as xgb
-# Load model từ file đã lưu
-model = joblib.load('ml_heuristic_model.pkl')
+import torch.nn as nn
 
+# Load model từ file đã lưu
+class HeuristicNet(nn.Module):
+    def __init__(self):
+        super(HeuristicNet, self).__init__()
+        self.net = nn.Sequential(
+            nn.Linear(5, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 2)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+model = HeuristicNet()
+model.load_state_dict(torch.load('ml_heuristic_model.pt'))
 
 maps = ox.graph_from_xml('map_new.osm')
-
+def euclidean(lat1, lon1, lat2, lon2):
+    lat_mean = radians((lat1 + lat2) / 2)
+    dx = (lon2 - lon1) * 111320 * cos(lat_mean)
+    dy = (lat2 - lat1) * 111320
+    return sqrt(dx**2 + dy**2)
+def predict_distance(node1, node2, model):
+    try:
+        # Lấy tọa độ
+        lat1 = maps.nodes[node1]['y']
+        lon1 = maps.nodes[node1]['x']
+        lat2 = maps.nodes[node2]['y']
+        lon2 = maps.nodes[node2]['x']
+        
+        # Tính Euclidean distance
+        euc_dist = euclidean(lat1, lon1, lat2, lon2)
+        
+        # Tạo tensor input đúng kích thước
+        features = torch.tensor([lat1, lon1, lat2, lon2, euc_dist], 
+                              dtype=torch.float32).reshape(1, -1)
+        
+        # Dự đoán
+        model.eval()
+        with torch.no_grad():
+            output = model(features)
+            
+        return output[0][0].item()  # Lấy giá trị khoảng cách
+        
+    except Exception as e:
+        print(f"Lỗi khi dự đoán: {str(e)}")
+        return None
 def Create_path_coord(path, maps):
     path_coords = [
         [(maps.nodes[e[0]]['y'], maps.nodes[e[0]]['x']), (maps.nodes[e[1]]['y'], maps.nodes[e[1]]['x'])]
@@ -77,8 +121,6 @@ def h1(current, goal):
     dy = (lat2 - lat1) * 111320
     
     return sqrt(dx**2 + dy**2)
-def h_ml(current, goal, maps):
-    return model.predict(xgb.DMatrix([[maps.nodes[current]['y'],maps.nodes[current]['x'], maps.nodes[goal]['y'],maps.nodes[ goal] ['x']]]))[0]
 
 def heuristic_bfs(graph, start, goal):
     if start == goal:
@@ -152,8 +194,7 @@ def A_star(graph, start, goal):
             if tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                # f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , ML_heuristic(neighbor, goal, graph, model))
-                f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , h_ml(neighbor, goal, maps))
+                f_score[neighbor] = g_score[neighbor] + min(h1(neighbor, goal)*1.2 , predict_distance(neighbor, goal, model))
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
     return None
 
